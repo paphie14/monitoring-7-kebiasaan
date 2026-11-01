@@ -8,6 +8,17 @@
 <header><div class="head"><h1>Monitoring 7 Kebiasaan Anak Indonesia Hebat</h1><p>SD Islam Cikal Harapan II</p></div></header>
 <main>
 <div class="tabs"><button class="tab active" data-tab="parent">Orang Tua</button><button class="tab" data-tab="staff">Admin / Wali Kelas</button></div>
+  <div class="card">
+  <h2>📌 Petunjuk Pengisian Monitoring</h2>
+  <ol style="padding-left:20px;margin-bottom:0">
+    <li>Monitoring wajib diisi <strong>setiap hari</strong>.</li>
+    <li>Pilih menu Orang Tua, lalu masukkan kode akses anak yang diberikan oleh wali kelas.</li>
+    <li>Pastikan nama dan kelas anak sudah benar.</li>
+    <li>Jawab 7 pertanyaan kebiasaan dengan memilih <strong>Ya</strong> atau <strong>Tidak</strong>.</li>
+    <li>Klik <strong>Kirim Pemantauan</strong> setelah semua pertanyaan terisi.</li>
+  </ol>
+  <p class="muted" style="margin-bottom:0">Terima kasih atas kerja sama Bapak/Ibu.</p>
+</div>
 <section id="parent"><div class="card"><h2>Form Pemantauan Orang Tua</h2><p class="muted">Masukkan kode akses yang diberikan sekolah.</p><label>Kode akses siswa</label><input id="parentCode" autocomplete="off" placeholder="Masukkan kode akses"><div class="actions"><button id="checkCode">Periksa Kode</button></div><div id="parentStatus" class="status hidden"></div></div>
 <div id="parentFormCard" class="card hidden"><h2 id="studentTitle">Data Siswa</h2><label>Tanggal pemantauan</label><input type="date" id="tanggal"><h3>Pelaksanaan 7 Kebiasaan</h3><div id="habits"></div><div class="actions"><button id="submitParent">Kirim Pemantauan</button></div><div id="submitStatus" class="status hidden"></div><h3>Riwayat Pemantauan</h3><div id="parentHistory" class="tablewrap muted">Belum dimuat.</div></div></section>
 <section id="staff" class="hidden"><div class="card" id="loginCard"><h2>Login Pengelola</h2><div class="grid"><div><label>Jenis akun</label><select id="role"><option value="admin">Admin</option><option value="teacher">Wali Kelas</option></select></div><div><label>Kode akses</label><input id="staffCode" type="password" autocomplete="off"></div></div><div class="actions"><button id="staffLogin">Masuk</button></div><div id="loginStatus" class="status hidden"></div></div>
