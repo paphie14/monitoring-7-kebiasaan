@@ -1,77 +1,703 @@
-<!doctype html>
-<html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Monitoring 7 Kebiasaan Anak Indonesia Hebat</title>
-<style>
-:root{--navy:#17345c;--blue:#245b9e;--bg:#f3f6fb;--ink:#243247;--muted:#64748b;--line:#dce4ef}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,Arial,sans-serif}header{background:linear-gradient(120deg,#17345c,#2868a9);color:white;padding:28px 18px}.head,main{max-width:1050px;margin:auto}.head h1{font-size:clamp(22px,4vw,32px);margin:0 0 6px}.head p{margin:0;color:#e4edf8}main{padding:22px 14px 50px}.tabs,.actions{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}button{border:0;border-radius:9px;padding:10px 15px;background:var(--blue);color:white;font-weight:650;cursor:pointer}.tab{background:#e4ebf5;color:var(--navy)}.tab.active{background:var(--navy);color:white}.card{background:white;border:1px solid var(--line);border-radius:14px;padding:20px;margin-bottom:16px;box-shadow:0 4px 16px #17345c0a}h2{font-size:20px;margin:0 0 14px;color:var(--navy)}h3{font-size:16px;margin:18px 0 8px}.muted{color:var(--muted)}.hidden{display:none!important}label{display:block;font-weight:650;margin:12px 0 5px}input,select{width:100%;padding:11px 12px;border:1px solid #cbd5e1;border-radius:8px;background:white;font:inherit;color:var(--ink)}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px}.status{padding:10px 12px;border-radius:8px;margin:12px 0;background:#eef4fb;color:var(--navy)}.status.ok{background:#eaf7ef;color:#16834b}.status.err{background:#fff0ef;color:#b42318}.habit{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}.habit select{max-width:145px}.secondary{background:#e8eef6;color:var(--navy)}table{border-collapse:collapse;width:100%;font-size:14px}th,td{padding:9px;border-bottom:1px solid var(--line);text-align:left}th{background:#f4f7fb;color:var(--navy)}.tablewrap{overflow:auto;margin-top:12px}.statrow{display:flex;gap:10px;flex-wrap:wrap}.stat{background:#f3f7fc;border-radius:10px;padding:12px 15px;min-width:120px}.stat b{display:block;font-size:23px;color:var(--navy)}footer{text-align:center;color:var(--muted);padding:18px;font-size:13px}@media(max-width:600px){.card{padding:15px}.habit select{width:115px}}@media print{header,.tabs,.actions{display:none!important}body{background:white}.card{box-shadow:none;border:0}main{padding:0}}
-</style></head><body>
-<header><div class="head"><h1>Monitoring 7 Kebiasaan Anak Indonesia Hebat</h1><p>SD Islam Cikal Harapan II</p></div></header>
-<main>
-<div class="tabs"><button class="tab active" data-tab="parent">Orang Tua</button><button class="tab" data-tab="staff">Admin / Wali Kelas</button></div>
-  <div class="card">
-  <h2>📌 Petunjuk Pengisian Monitoring</h2>
-  <ol style="padding-left:20px;margin-bottom:0">
-    <li>Monitoring wajib diisi <strong>setiap hari</strong>.</li>
-    <li>Pilih menu Orang Tua, lalu masukkan kode akses anak yang diberikan oleh wali kelas.</li>
-    <li>Pastikan nama dan kelas anak sudah benar.</li>
-    <li>Jawab 7 pertanyaan kebiasaan dengan memilih <strong>Ya</strong> atau <strong>Tidak</strong>.</li>
-    <li>Klik <strong>Kirim Pemantauan</strong> setelah semua pertanyaan terisi.</li>
-  </ol>
-  <p class="muted" style="margin-bottom:0">Terima kasih atas kerja sama Bapak/Ibu.</p>
-</div>
-<section id="parent"><div class="card"><h2>Form Pemantauan Orang Tua</h2><p class="muted">Masukkan kode akses yang diberikan sekolah.</p><label>Kode akses siswa</label><input id="parentCode" autocomplete="off" placeholder="Masukkan kode akses"><div class="actions"><button id="checkCode">Periksa Kode</button></div><div id="parentStatus" class="status hidden"></div></div>
-<div id="parentFormCard" class="card hidden"><h2 id="studentTitle">Data Siswa</h2><label>Tanggal pemantauan</label><input type="date" id="tanggal"><h3>Pelaksanaan 7 Kebiasaan</h3><div id="habits"></div><div class="actions"><button id="submitParent">Kirim Pemantauan</button></div><div id="submitStatus" class="status hidden"></div><h3>Riwayat Pemantauan</h3><div id="parentHistory" class="tablewrap muted">Belum dimuat.</div></div></section>
-<section id="staff" class="hidden"><div class="card" id="loginCard"><h2>Login Pengelola</h2><div class="grid"><div><label>Jenis akun</label><select id="role"><option value="admin">Admin</option><option value="teacher">Wali Kelas</option></select></div><div><label>Kode akses</label><input id="staffCode" type="password" autocomplete="off"></div></div><div class="actions"><button id="staffLogin">Masuk</button></div><div id="loginStatus" class="status hidden"></div></div>
-<div id="dashboard" class="hidden"><div class="card"><h2>Dashboard Monitoring</h2><p id="staffInfo" class="muted"></p><div class="grid">
-<div><label>Periode</label><select id="period"><option value="day">Harian</option><option value="month" selected>Bulanan</option><option value="semester">Semester</option><option value="year">Tahunan</option></select></div>
-<div><label>Tanggal</label><input id="filterDate" type="date"></div><div><label>Bulan</label><input id="filterMonth" type="month"></div>
-<div><label>Semester</label><select id="semester"><option value="1">Semester 1 (Juli–Desember)</option><option value="2">Semester 2 (Januari–Juni)</option></select></div>
-<div><label>Tahun</label><input id="filterYear" type="number"></div><div id="classFilterWrap"><label>Kelas / Rombel</label><select id="classFilter"><option value="">Semua kelas</option></select></div>
-<div id="gradeFilterWrap"><label>Tingkat</label><select id="gradeFilter"><option value="">Semua tingkat</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option></select></div>
-<div><label>Nama siswa (opsional)</label><input id="studentFilter" placeholder="Nama siswa"></div></div>
-<div class="actions"><button id="applyFilters">Tampilkan</button><button class="secondary" id="downloadCsv">Unduh CSV</button><button class="secondary" id="printReport">Cetak</button><button class="secondary" id="logout">Keluar</button></div><div id="reportStatus" class="status hidden"></div></div>
-<div class="card"><h2>Ringkasan Laporan</h2><div id="summary" class="statrow"></div><div id="habitReport"></div><h3>Rekap per Siswa</h3><div id="studentReport" class="tablewrap"></div></div></div></section>
-</main><footer>SD Islam Cikal Harapan II · Monitoring 7 Kebiasaan Anak Indonesia Hebat</footer><iframe name="g7postframe" id="g7postframe" style="position:absolute;width:1px;height:1px;left:-9999px;border:0"></iframe>
-<script>
-const API_URL='https://script.google.com/macros/s/AKfycbyNVj5-fCwQWsGEqQXUfYOCTWkwW_KitrXleGAA3tFN4ECDhNmQuWzH9voikDGiP1mM/exec';
-const HABITS=['Bangun Pagi','Beribadah','Berolahraga','Makan Sehat dan Bergizi','Gemar Belajar','Bermasyarakat','Tidur Cepat'];
-const $=id=>document.getElementById(id);let currentStudent=null,staffToken='',staffRole='',lastReport=null,postResolve=null,postTimer=null;
-function status(id,msg,type=''){const e=$(id);e.textContent=msg;e.className='status '+type}
-function jsonp(params){return new Promise((resolve,reject)=>{const cb='g7cb_'+Date.now()+'_'+Math.floor(Math.random()*9999),s=document.createElement('script'),q=new URLSearchParams({...params,callback:cb}),t=setTimeout(()=>{clean();reject(Error('Waktu permintaan habis.'))},20000);function clean(){clearTimeout(t);delete window[cb];s.remove()}window[cb]=d=>{clean();resolve(d)};s.onerror=()=>{clean();reject(Error('Tidak dapat menghubungi Apps Script.'))};s.src=API_URL+'?'+q;document.body.appendChild(s)})}
-function post(action,payload){return new Promise((resolve,reject)=>{if(postResolve){reject(Error('Permintaan lain masih diproses.'));return}postResolve=resolve;const f=document.createElement('form');f.method='POST';f.action=API_URL;f.target='g7postframe';f.style.display='none';[['action',action],['payload',JSON.stringify(payload)]].forEach(([n,v])=>{const i=document.createElement('input');i.name=n;i.value=v;f.appendChild(i)});document.body.appendChild(f);postTimer=setTimeout(()=>{postResolve=null;f.remove();reject(Error('Server tidak memberikan respons.'))},25000);f.submit();setTimeout(()=>f.remove(),1000)})}
-window.addEventListener('message',e=>{if(e.data?.type==='G7KAIH_API'&&postResolve){clearTimeout(postTimer);const done=postResolve;postResolve=null;done(e.data.result)}});
-const today=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`};
-$('tanggal').value=today();$('filterDate').value=today();$('filterMonth').value=today().slice(0,7);$('filterYear').value=new Date().getFullYear();
-document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>{document.querySelectorAll('[data-tab]').forEach(x=>x.classList.toggle('active',x===b));$('parent').classList.toggle('hidden',b.dataset.tab!=='parent');$('staff').classList.toggle('hidden',b.dataset.tab!=='staff')});
-$('habits').innerHTML=HABITS.map((h,i)=>`<div class="habit"><strong>${i+1}. ${h}</strong><select id="habit${i}"><option value="">Pilih jawaban</option><option>Ya</option><option>Tidak</option></select></div>`).join('');
-$('checkCode').onclick=async()=>{ $('parentFormCard').classList.add('hidden');const code=$('parentCode').value.trim();if(!code){status('parentStatus','Masukkan kode akses.','err');return}try{const r=await jsonp({action:'parentReport',code});if(!r.ok)throw Error(r.message);currentStudent=r.student;$('studentTitle').textContent=`${r.student.nama} · Kelas ${r.student.kelas}`;$('parentFormCard').classList.remove('hidden');history(r.records||[]);status('parentStatus','Kode valid. Silakan isi pemantauan.','ok')}catch(e){status('parentStatus',e.message,'err')}};
-function history(rows){$('parentHistory').innerHTML=rows.length?'<table><thead><tr><th>Tanggal</th><th>Sumber</th><th>Jawaban Ya</th></tr></thead><tbody>'+rows.sort((a,b)=>b.tanggal.localeCompare(a.tanggal)).map(r=>`<tr><td>${r.tanggal}</td><td>${r.source||'-'}</td><td>${(r.answers||[]).filter(x=>x==='Ya').length}/7</td></tr>`).join('')+'</tbody></table>':'Belum ada riwayat pemantauan.'}
-$('submitParent').onclick=async()=>{if(!currentStudent)return;const answers=HABITS.map((_,i)=>$('habit'+i).value),tanggal=$('tanggal').value;if(!tanggal||answers.some(x=>!x)){status('submitStatus','Tanggal dan semua jawaban wajib diisi.','err');return}try{const r=await post('parentSubmit',{code:$('parentCode').value.trim(),tanggal,answers});if(!r.ok)throw Error(r.message);status('submitStatus',r.message,'ok');HABITS.forEach((_,i)=>$('habit'+i).value='');const fresh=await jsonp({action:'parentReport',code:$('parentCode').value.trim()});if(fresh.ok)history(fresh.records||[])}catch(e){status('submitStatus',e.message,'err')}};
-$('staffLogin').onclick=async()=>{try{const r=await post('staffLogin',{role:$('role').value,code:$('staffCode').value.trim()});if(!r.ok)throw Error(r.message);staffToken=r.token;staffRole=r.role;const init=await jsonp({action:'staffInitial',token:staffToken});if(!init.ok)throw Error(init.message);$('classFilter').innerHTML='<option value="">Semua kelas</option>'+(init.data.classes||[]).map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join('');$('staffInfo').textContent=staffRole==='admin'?'Masuk sebagai Admin':`Wali Kelas · ${r.kelas}`;if(staffRole==='teacher'){$('classFilter').value=r.kelas;$('classFilterWrap').classList.add('hidden');$('gradeFilterWrap').classList.add('hidden')}$('loginCard').classList.add('hidden');$('dashboard').classList.remove('hidden');await loadReport()}catch(e){status('loginStatus',e.message,'err')}};
-function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
-async function loadReport(){const p={action:'staffReport',token:staffToken,period:$('period').value,date:$('filterDate').value,month:$('filterMonth').value,semester:$('semester').value,year:$('filterYear').value,kelas:$('classFilter').value,tingkat:$('gradeFilter').value,student:$('studentFilter').value.trim()};try{const r=await jsonp(p);if(!r.ok)throw Error(r.message);lastReport=r.report;render(lastReport)}catch(e){status('reportStatus',e.message,'err')}}
-function render(r){$('summary').innerHTML=`<div class="stat"><b>${r.entries||0}</b>Entri pemantauan</div><div class="stat"><b>${(r.students||[]).length}</b>Siswa terpantau</div><div class="stat"><b>${r.overallPercent||0}%</b>Capaian keseluruhan</div>`;$('habitReport').innerHTML='<h3>Rekap 7 Kebiasaan</h3><div class="tablewrap"><table><tr><th>Kebiasaan</th><th>Ya</th><th>Tidak</th><th>Capaian</th></tr>'+(r.habits||[]).map(h=>`<tr><td>${esc(h.name)}</td><td>${h.yes}</td><td>${h.no}</td><td>${h.percent}%</td></tr>`).join('')+'</table></div>';$('studentReport').innerHTML='<table><tr><th>Kelas</th><th>Nama siswa</th><th>Entri</th><th>Persentase Ya</th></tr>'+(r.students||[]).map(s=>`<tr><td>${esc(s.kelas)}</td><td>${esc(s.nama)}</td><td>${s.total}</td><td>${s.percent}%</td></tr>`).join('')+'</table>'}
 
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Monitoring 7 Kebiasaan Anak Indonesia Hebat</title>
+
+<style>
+:root{
+  --navy:#17345c;
+  --blue:#245b9e;
+  --bg:#f3f6fb;
+  --ink:#243247;
+  --muted:#64748b;
+  --line:#dce4ef
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--ink);
+  font:15px/1.5 system-ui,Arial,sans-serif
+}
+header{
+  background:linear-gradient(120deg,#17345c,#2868a9);
+  color:white;
+  padding:28px 18px
+}
+.head,main{max-width:1050px;margin:auto}
+.head h1{
+  font-size:clamp(22px,4vw,32px);
+  margin:0 0 6px
+}
+.head p{margin:0;color:#e4edf8}
+main{padding:22px 14px 50px}
+.tabs,.actions{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  margin-bottom:16px
+}
+button{
+  border:0;
+  border-radius:9px;
+  padding:10px 15px;
+  background:var(--blue);
+  color:white;
+  font-weight:650;
+  cursor:pointer
+}
+button:disabled{opacity:.5;cursor:not-allowed}
+.tab{background:#e4ebf5;color:var(--navy)}
+.tab.active{background:var(--navy);color:white}
+.card{
+  background:white;
+  border:1px solid var(--line);
+  border-radius:14px;
+  padding:20px;
+  margin-bottom:16px;
+  box-shadow:0 4px 16px #17345c0a
+}
+h2{font-size:20px;margin:0 0 14px;color:var(--navy)}
+h3{font-size:16px;margin:18px 0 8px}
+.muted{color:var(--muted)}
+.hidden{display:none!important}
+label{display:block;font-weight:650;margin:12px 0 5px}
+input,select{
+  width:100%;
+  padding:11px 12px;
+  border:1px solid #cbd5e1;
+  border-radius:8px;
+  background:white;
+  font:inherit;
+  color:var(--ink)
+}
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(210px,1fr));
+  gap:12px
+}
+.status{
+  padding:10px 12px;
+  border-radius:8px;
+  margin:12px 0;
+  background:#eef4fb;
+  color:var(--navy)
+}
+.status.ok{background:#eaf7ef;color:#16834b}
+.status.err{background:#fff0ef;color:#b42318}
+.habit{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:12px 0;
+  border-bottom:1px solid var(--line)
+}
+.habit select{max-width:145px}
+.secondary{background:#e8eef6;color:var(--navy)}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{
+  padding:9px;
+  border-bottom:1px solid var(--line);
+  text-align:left
+}
+th{background:#f4f7fb;color:var(--navy)}
+.tablewrap{overflow:auto;margin-top:12px}
+.statrow{display:flex;gap:10px;flex-wrap:wrap}
+.stat{
+  background:#f3f7fc;
+  border-radius:10px;
+  padding:12px 15px;
+  min-width:120px
+}
+.stat b{
+  display:block;
+  font-size:23px;
+  color:var(--navy)
+}
+footer{
+  text-align:center;
+  color:var(--muted);
+  padding:18px;
+  font-size:13px
+}
+@media(max-width:600px){
+  .card{padding:15px}
+  .habit select{width:115px}
+}
+@media print{
+  header,.tabs,.actions{display:none!important}
+  body{background:white}
+  .card{box-shadow:none;border:0}
+  main{padding:0}
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <div class="head">
+    <h1>Monitoring 7 Kebiasaan Anak Indonesia Hebat</h1>
+    <p>SD Islam Cikal Harapan II</p>
+  </div>
+</header>
+
+<main>
+
+<div class="tabs">
+  <button class="tab active" data-tab="parent">Orang Tua</button>
+  <button class="tab" data-tab="staff">Admin / Wali Kelas</button>
+</div>
+
+<!-- MENU ORANG TUA -->
+<section id="parent">
+
+  <div class="card">
+    <h2>📌 Petunjuk Pengisian Monitoring</h2>
+    <ol style="padding-left:20px;margin-bottom:0">
+      <li>Monitoring wajib diisi <strong>setiap hari</strong>.</li>
+      <li>Pilih menu Orang Tua, lalu masukkan kode akses anak yang diberikan oleh wali kelas.</li>
+      <li>Pastikan nama dan kelas anak sudah benar.</li>
+      <li>Jawab 7 pertanyaan kebiasaan dengan memilih <strong>Ya</strong> atau <strong>Tidak</strong>.</li>
+      <li>Klik <strong>Kirim Pemantauan</strong> setelah semua pertanyaan terisi.</li>
+    </ol>
+    <p class="muted" style="margin-bottom:0">
+      Terima kasih atas kerja sama Bapak/Ibu.
+    </p>
+  </div>
+
+  <div class="card">
+    <h2>Form Pemantauan Orang Tua</h2>
+    <p class="muted">Masukkan kode akses yang diberikan sekolah.</p>
+
+    <label>Kode akses siswa</label>
+    <input id="parentCode" autocomplete="off" placeholder="Masukkan kode akses">
+
+    <div class="actions">
+      <button id="checkCode">Periksa Kode</button>
+    </div>
+
+    <div id="parentStatus" class="status hidden"></div>
+  </div>
+
+  <div id="parentFormCard" class="card hidden">
+    <h2 id="studentTitle">Data Siswa</h2>
+
+    <label>Tanggal pemantauan</label>
+    <input type="date" id="tanggal">
+
+    <h3>Pelaksanaan 7 Kebiasaan</h3>
+    <div id="habits"></div>
+
+    <div class="actions">
+      <button id="submitParent">Kirim Pemantauan</button>
+    </div>
+
+    <div id="submitStatus" class="status hidden"></div>
+
+    <h3>Riwayat Pemantauan</h3>
+    <div id="parentHistory" class="tablewrap muted">
+      Belum dimuat.
+    </div>
+  </div>
+
+</section>
+
+<!-- MENU ADMIN / WALI KELAS -->
+<section id="staff" class="hidden">
+
+  <div class="card" id="loginCard">
+    <h2>Login Pengelola</h2>
+
+    <div class="grid">
+      <div>
+        <label>Jenis akun</label>
+        <select id="role">
+          <option value="admin">Admin</option>
+          <option value="teacher">Wali Kelas</option>
+        </select>
+      </div>
+
+      <div>
+        <label>Kode akses</label>
+        <input id="staffCode" type="password" autocomplete="off">
+      </div>
+    </div>
+
+    <div class="actions">
+      <button id="staffLogin">Masuk</button>
+    </div>
+
+    <div id="loginStatus" class="status hidden"></div>
+  </div>
+
+  <div id="dashboard" class="hidden">
+
+    <div class="card">
+      <h2>Dashboard Monitoring</h2>
+      <p id="staffInfo" class="muted"></p>
+
+      <div class="grid">
+
+        <div>
+          <label>Periode</label>
+          <select id="period">
+            <option value="day">Harian</option>
+            <option value="month" selected>Bulanan</option>
+            <option value="semester">Semester</option>
+            <option value="year">Tahunan</option>
+          </select>
+        </div>
+
+        <div>
+          <label>Tanggal</label>
+          <input id="filterDate" type="date">
+        </div>
+
+        <div>
+          <label>Bulan</label>
+          <input id="filterMonth" type="month">
+        </div>
+
+        <div>
+          <label>Semester</label>
+          <select id="semester">
+            <option value="1">Semester 1 (Juli–Desember)</option>
+            <option value="2">Semester 2 (Januari–Juni)</option>
+          </select>
+        </div>
+
+        <div>
+          <label>Tahun</label>
+          <input id="filterYear" type="number">
+        </div>
+
+        <div id="classFilterWrap">
+          <label>Kelas / Rombel</label>
+          <select id="classFilter">
+            <option value="">Semua kelas</option>
+          </select>
+        </div>
+
+        <div id="gradeFilterWrap">
+          <label>Tingkat</label>
+          <select id="gradeFilter">
+            <option value="">Semua tingkat</option>
+            <option>1</option>
+            <option>2</option>
+            <option>3</option>
+            <option>4</option>
+            <option>5</option>
+            <option>6</option>
+          </select>
+        </div>
+
+        <div>
+          <label>Nama siswa (opsional)</label>
+          <input id="studentFilter" placeholder="Nama siswa">
+        </div>
+
+      </div>
+
+      <div class="actions">
+        <button id="applyFilters">Tampilkan</button>
+        <button class="secondary" id="downloadCsv">Unduh CSV</button>
+        <button class="secondary" id="printReport">Cetak</button>
+        <button class="secondary" id="logout">Keluar</button>
+      </div>
+
+      <div id="reportStatus" class="status hidden"></div>
+    </div>
+
+    <div class="card">
+      <h2>Ringkasan Laporan</h2>
+      <div id="summary" class="statrow"></div>
+      <div id="habitReport"></div>
+      <h3>Rekap per Siswa</h3>
+      <div id="studentReport" class="tablewrap"></div>
+    </div>
+
+  </div>
+</section>
+
+</main>
+
+<footer>
+  SD Islam Cikal Harapan II · Monitoring 7 Kebiasaan Anak Indonesia Hebat
+</footer>
+
+<iframe
+  name="g7postframe"
+  id="g7postframe"
+  style="position:absolute;width:1px;height:1px;left:-9999px;border:0">
+</iframe>
+
+<script>
+
+const API_URL='https://script.google.com/macros/s/AKfycbyNVj5-fCwQWsGEqQXUfYOCTWkwW_KitrXleGAA3tFN4ECDhNmQuWzH9voikDGiP1mM/exec';
+
+const HABITS=[
+  'Bangun Pagi',
+  'Beribadah',
+  'Berolahraga',
+  'Makan Sehat dan Bergizi',
+  'Gemar Belajar',
+  'Bermasyarakat',
+  'Tidur Cepat'
+];
+
+const $=id=>document.getElementById(id);
+
+let currentStudent=null;
+let staffToken='';
+let staffRole='';
+let lastReport=null;
+let postResolve=null;
+let postTimer=null;
+
+function status(id,msg,type=''){
+  const e=$(id);
+  e.textContent=msg;
+  e.className='status '+type;
+}
+
+function jsonp(params){
+  return new Promise((resolve,reject)=>{
+    const cb='g7cb_'+Date.now()+'_'+Math.floor(Math.random()*9999);
+    const s=document.createElement('script');
+    const q=new URLSearchParams({...params,callback:cb});
+
+    const t=setTimeout(()=>{
+      clean();
+      reject(Error('Waktu permintaan habis.'));
+    },20000);
+
+    function clean(){
+      clearTimeout(t);
+      delete window[cb];
+      s.remove();
+    }
+
+    window[cb]=d=>{
+      clean();
+      resolve(d);
+    };
+
+    s.onerror=()=>{
+      clean();
+      reject(Error('Tidak dapat menghubungi Apps Script.'));
+    };
+
+    s.src=API_URL+'?'+q;
+    document.body.appendChild(s);
+  });
+}
+
+function post(action,payload){
+  return new Promise((resolve,reject)=>{
+    if(postResolve){
+      reject(Error('Permintaan lain masih diproses.'));
+      return;
+    }
+
+    postResolve=resolve;
+
+    const f=document.createElement('form');
+    f.method='POST';
+    f.action=API_URL;
+    f.target='g7postframe';
+    f.style.display='none';
+
+    [['action',action],['payload',JSON.stringify(payload)]].forEach(([n,v])=>{
+      const i=document.createElement('input');
+      i.name=n;
+      i.value=v;
+      f.appendChild(i);
+    });
+
+    document.body.appendChild(f);
+
+    postTimer=setTimeout(()=>{
+      postResolve=null;
+      f.remove();
+      reject(Error('Server tidak memberikan respons.'));
+    },25000);
+
+    f.submit();
+    setTimeout(()=>f.remove(),1000);
+  });
+}
+
+window.addEventListener('message',e=>{
+  if(e.data?.type==='G7KAIH_API'&&postResolve){
+    clearTimeout(postTimer);
+    const done=postResolve;
+    postResolve=null;
+    done(e.data.result);
+  }
+});
+
+const today=()=>{
+  const d=new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+};
+
+$('tanggal').value=today();
+$('filterDate').value=today();
+$('filterMonth').value=today().slice(0,7);
+$('filterYear').value=new Date().getFullYear();
+
+document.querySelectorAll('[data-tab]').forEach(b=>{
+  b.onclick=()=>{
+    document.querySelectorAll('[data-tab]').forEach(x=>{
+      x.classList.toggle('active',x===b);
+    });
+
+    $('parent').classList.toggle('hidden',b.dataset.tab!=='parent');
+    $('staff').classList.toggle('hidden',b.dataset.tab!=='staff');
+  };
+});
+
+$('habits').innerHTML=HABITS.map((h,i)=>
+  `<div class="habit">
+    <strong>${i+1}. ${h}</strong>
+    <select id="habit${i}">
+      <option value="">Pilih jawaban</option>
+      <option>Ya</option>
+      <option>Tidak</option>
+    </select>
+  </div>`
+).join('');
+
+$('checkCode').onclick=async()=>{
+  $('parentFormCard').classList.add('hidden');
+
+  const code=$('parentCode').value.trim();
+
+  if(!code){
+    status('parentStatus','Masukkan kode akses.','err');
+    return;
+  }
+
+  try{
+    const r=await jsonp({action:'parentReport',code});
+
+    if(!r.ok)throw Error(r.message);
+
+    currentStudent=r.student;
+
+    $('studentTitle').textContent=
+      `${r.student.nama} · Kelas ${r.student.kelas}`;
+
+    $('parentFormCard').classList.remove('hidden');
+
+    history(r.records||[]);
+
+    status('parentStatus','Kode valid. Silakan isi pemantauan.','ok');
+
+  }catch(e){
+    status('parentStatus',e.message,'err');
+  }
+};
+
+function history(rows){
+  $('parentHistory').innerHTML=rows.length
+    ? '<table><thead><tr><th>Tanggal</th><th>Sumber</th><th>Jawaban Ya</th></tr></thead><tbody>'+
+      rows.sort((a,b)=>b.tanggal.localeCompare(a.tanggal)).map(r=>
+        `<tr>
+          <td>${r.tanggal}</td>
+          <td>${r.source||'-'}</td>
+          <td>${(r.answers||[]).filter(x=>x==='Ya').length}/7</td>
+        </tr>`
+      ).join('')+
+      '</tbody></table>'
+    : 'Belum ada riwayat pemantauan.';
+}
+
+$('submitParent').onclick=async()=>{
+  if(!currentStudent)return;
+
+  const answers=HABITS.map((_,i)=>$('habit'+i).value);
+  const tanggal=$('tanggal').value;
+
+  if(!tanggal||answers.some(x=>!x)){
+    status('submitStatus','Tanggal dan semua jawaban wajib diisi.','err');
+    return;
+  }
+
+  try{
+    const r=await post('parentSubmit',{
+      code:$('parentCode').value.trim(),
+      tanggal,
+      answers
+    });
+
+    if(!r.ok)throw Error(r.message);
+
+    status('submitStatus',r.message,'ok');
+
+    HABITS.forEach((_,i)=>$('habit'+i).value='');
+
+    const fresh=await jsonp({
+      action:'parentReport',
+      code:$('parentCode').value.trim()
+    });
+
+    if(fresh.ok)history(fresh.records||[]);
+
+  }catch(e){
+    status('submitStatus',e.message,'err');
+  }
+};
+
+$('staffLogin').onclick=async()=>{
+  try{
+    const r=await post('staffLogin',{
+      role:$('role').value,
+      code:$('staffCode').value.trim()
+    });
+
+    if(!r.ok)throw Error(r.message);
+
+    staffToken=r.token;
+    staffRole=r.role;
+
+    const init=await jsonp({
+      action:'staffInitial',
+      token:staffToken
+    });
+
+    if(!init.ok)throw Error(init.message);
+
+    $('classFilter').innerHTML=
+      '<option value="">Semua kelas</option>'+
+      (init.data.classes||[]).map(c=>
+        `<option value="${esc(c)}">${esc(c)}</option>`
+      ).join('');
+
+    $('staffInfo').textContent=
+      staffRole==='admin'
+        ? 'Masuk sebagai Admin'
+        : `Wali Kelas · ${r.kelas}`;
+
+    if(staffRole==='teacher'){
+      $('classFilter').value=r.kelas;
+      $('classFilterWrap').classList.add('hidden');
+      $('gradeFilterWrap').classList.add('hidden');
+    }
+
+    $('loginCard').classList.add('hidden');
+    $('dashboard').classList.remove('hidden');
+
+    await loadReport();
+
+  }catch(e){
+    status('loginStatus',e.message,'err');
+  }
+};
+
+function esc(s){
+  return String(s??'').replace(/[&<>"']/g,c=>({
+    '&':'&amp;',
+    '<':'&lt;',
+    '>':'&gt;',
+    '"':'&quot;',
+    "'":'&#39;'
+  }[c]));
+}
+
+async function loadReport(){
+  const p={
+    action:'staffReport',
+    token:staffToken,
+    period:$('period').value,
+    date:$('filterDate').value,
+    month:$('filterMonth').value,
+    semester:$('semester').value,
+    year:$('filterYear').value,
+    kelas:$('classFilter').value,
+    tingkat:$('gradeFilter').value,
+    student:$('studentFilter').value.trim()
+  };
+
+  try{
+    const r=await jsonp(p);
+
+    if(!r.ok)throw Error(r.message);
+
+    lastReport=r.report;
+    render(lastReport);
+
+    status('reportStatus','Laporan berhasil dimuat.','ok');
+
+  }catch(e){
+    status('reportStatus',e.message,'err');
+  }
+}
+
+function render(r){
+  $('summary').innerHTML=
+    `<div class="stat"><b>${r.entries||0}</b>Entri pemantauan</div>
+    <div class="stat"><b>${(r.students||[]).length}</b>Siswa terpantau</div>
+    <div class="stat"><b>${r.overallPercent||0}%</b>Capaian keseluruhan</div>`;
+
+  $('habitReport').innerHTML=
+    '<h3>Rekap 7 Kebiasaan</h3><div class="tablewrap"><table>'+
+    '<tr><th>Kebiasaan</th><th>Ya</th><th>Tidak</th><th>Capaian</th></tr>'+
+    (r.habits||[]).map(h=>
+      `<tr>
+        <td>${esc(h.name)}</td>
+        <td>${h.yes}</td>
+        <td>${h.no}</td>
+        <td>${h.percent}%</td>
+      </tr>`
+    ).join('')+
+    '</table></div>';
+
+  $('studentReport').innerHTML=
+    '<table><tr><th>Kelas</th><th>Nama siswa</th><th>Entri</th><th>Persentase Ya</th></tr>'+
+    (r.students||[]).map(s=>
+      `<tr>
+        <td>${esc(s.kelas)}</td>
+        <td>${esc(s.nama)}</td>
+        <td>${s.total}</td>
+        <td>${s.percent}%</td>
+      </tr>`
+    ).join('')+
+    '</table>';
+}
+
+/* TOMBOL FILTER */
 $('applyFilters').onclick=loadReport;
 
+/* TOMBOL KELUAR */
 $('logout').onclick=()=>{
   staffToken='';
   staffRole='';
   lastReport=null;
+
   $('dashboard').classList.add('hidden');
   $('loginCard').classList.remove('hidden');
   $('staffCode').value='';
+
   status('loginStatus','Anda telah keluar.','ok');
 };
 
+/* TOMBOL CETAK */
 $('printReport').onclick=()=>{
   if(!lastReport){
     status('reportStatus','Belum ada laporan untuk dicetak.','err');
     return;
   }
+
   window.print();
 };
 
+/* TOMBOL UNDUH CSV */
 $('downloadCsv').onclick=()=>{
   if(!lastReport){
     status('reportStatus','Belum ada laporan untuk diunduh.','err');
@@ -81,7 +707,10 @@ $('downloadCsv').onclick=()=>{
   const rows=[
     ['Kelas','Nama Siswa','Entri','Persentase Ya'],
     ...(lastReport.students||[]).map(s=>[
-      s.kelas,s.nama,s.total,s.percent+'%'
+      s.kelas,
+      s.nama,
+      s.total,
+      s.percent+'%'
     ])
   ];
 
@@ -89,17 +718,28 @@ $('downloadCsv').onclick=()=>{
     r.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')
   ).join('\r\n');
 
-  const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
+  const blob=new Blob([csv],{
+    type:'text/csv;charset=utf-8'
+  });
+
   const url=URL.createObjectURL(blob);
   const a=document.createElement('a');
 
   a.href=url;
   a.download='laporan-monitoring-7-kebiasaan.csv';
+
   document.body.appendChild(a);
   a.click();
   a.remove();
 
   setTimeout(()=>URL.revokeObjectURL(url),1000);
 };
-jsonp({action:'ping'}).then(r=>console.log('G7KAIH API',r)).catch(e=>console.warn(e.message));
-</script></body></html>
+
+/* CEK KONEKSI APPS SCRIPT */
+jsonp({action:'ping'})
+  .then(r=>console.log('G7KAIH API',r))
+  .catch(e=>console.warn(e.message));
+
+</script>
+</body>
+</html>
