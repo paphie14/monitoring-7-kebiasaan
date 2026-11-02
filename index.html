@@ -146,6 +146,9 @@ footer{
 .daily-col{min-width:25px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:130px;gap:5px}
 .daily-bar{width:17px;min-height:2px;background:#2b70b8;border-radius:5px 5px 0 0}
 .daily-label{font-size:10px;color:var(--muted)}
+.student-name-link{background:transparent;color:var(--blue);padding:0;border:0;border-radius:0;text-decoration:underline;text-underline-offset:3px;font:inherit;font-weight:700;cursor:pointer}
+.student-name-link:hover{color:var(--navy)}
+.student-name-link:focus-visible{outline:2px solid var(--blue);outline-offset:3px;border-radius:3px}
 @media print{body.print-individual header,body.print-individual .tabs,body.print-individual #loginCard,body.print-individual #dashboard>.card:first-child,body.print-individual #summary,body.print-individual #habitReport,body.print-individual #studentReport,body.print-individual #individualCard>h2,body.print-individual #individualCard>label,body.print-individual #individualCard>select,body.print-individual #individualCard>.actions{display:none!important}body.print-individual #individualCard{display:block!important;border:0;box-shadow:none}body.print-individual #individualReport{display:block!important}}
 .btn-loading{
   display:inline-flex;
@@ -358,6 +361,7 @@ footer{
       <h2>Laporan Individu Siswa</h2>
       <label>Pilih siswa</label>
       <select id="individualStudent"><option value="">Pilih siswa dari hasil laporan</option></select>
+      <div class="actions"><button type="button" class="secondary" id="backToStudentList">← Kembali ke Rekap Siswa</button></div>
       <div id="individualReport" class="muted">Pilih siswa untuk melihat laporan individu.</div>
       <div class="actions"><button class="secondary" id="printIndividual">Cetak Laporan Individu / PDF</button></div>
     </div>
@@ -776,10 +780,10 @@ function render(r){
     '<table><thead><tr><th>Kelas</th><th>Nama siswa</th><th>Entri</th>'+
     HABITS.map(h=>`<th>${esc(h)}</th>`).join('')+
     '<th>Pengisian</th><th>Capaian Ya</th></tr></thead><tbody>'+
-    (r.students||[]).map(s=>
+    (r.students||[]).map((s,i)=>
       `<tr>
         <td>${esc(s.kelas)}</td>
-        <td>${esc(s.nama)}</td>
+        <td><button type="button" class="student-name-link" data-student-index="${i}" title="Klik untuk melihat rincian ${esc(s.nama)}">${esc(s.nama)}</button></td>
         <td>${Number(s.total||0)}</td>
         ${HABITS.map((h,i)=>`<td>${studentHabitPercent(s,i,h)}</td>`).join('')}
         <td>${studentCompletionPercent(s)}</td>
@@ -794,6 +798,17 @@ function render(r){
   if(oldIndiv && (r.students||[]).some(s=>`${s.kelas}|${s.nama}`===oldIndiv)){
     indiv.value=oldIndiv;renderIndividual(r.students.find(s=>`${s.kelas}|${s.nama}`===oldIndiv));
   }else{indiv.value='';renderIndividual(null);}
+
+  // Nama siswa pada tabel menjadi pintasan ke laporan rinci siswa tersebut.
+  $('studentReport').querySelectorAll('.student-name-link').forEach(button=>{
+    button.addEventListener('click',()=>{
+      const student=(lastReport?.students||[])[Number(button.dataset.studentIndex)];
+      if(!student)return;
+      indiv.value=`${student.kelas}|${student.nama}`;
+      renderIndividual(student);
+      $('individualCard').scrollIntoView({behavior:'smooth',block:'start'});
+    });
+  });
 }
 
 
@@ -812,8 +827,13 @@ function renderIndividual(student){
     ${habits.map(h=>`<div class="habit-line"><span>${esc(h.name)}</span><div class="progress"><span style="width:${Math.max(0,Math.min(100,Number(h.percent)||0))}%"></span></div><strong>${h.percent||0}%</strong></div>`).join('')}
     <h3>B. Grafik Perkembangan Harian</h3>
     ${daily.length?`<div class="daily-chart">${daily.map(d=>`<div class="daily-col" title="${esc(d.tanggal)}: ${d.percent}%"><div class="daily-bar" style="height:${Math.max(2,Number(d.percent)||0)}%"></div><span class="daily-label">${esc(d.tanggal.slice(8,10))}</span></div>`).join('')}</div><p class="muted">Setiap batang menunjukkan persentase jawaban Ya pada tanggal tersebut.</p>`:'<p class="muted">Belum ada data harian pada periode ini.</p>'}
-    <h3>C. Catatan Evaluasi</h3><p>Kebiasaan dengan capaian tertinggi: <strong>${strongest?esc(strongest.name)+' ('+strongest.percent+'%)':'-'}</strong>.</p>
-    <p>Kebiasaan yang perlu ditingkatkan: <strong>${weakest?esc(weakest.name)+' ('+weakest.percent+'%)':'-'}</strong>.</p>
+    <h3>C. Resume Capaian Kebiasaan</h3>
+    <div class="individual-grid">
+      <div class="individual-stat" style="border-left:5px solid #16835d"><span class="muted">Persentase tertinggi</span><b>${strongest?esc(strongest.name):'Belum tersedia'}</b><strong>${strongest?`${Number(strongest.percent||0).toFixed(1).replace(/\.0$/,'')}%`:'—'}</strong></div>
+      <div class="individual-stat" style="border-left:5px solid #c47a24"><span class="muted">Persentase terendah</span><b>${weakest?esc(weakest.name):'Belum tersedia'}</b><strong>${weakest?`${Number(weakest.percent||0).toFixed(1).replace(/\.0$/,'')}%`:'—'}</strong></div>
+    </div>
+    <p>Kebiasaan dengan capaian tertinggi adalah <strong>${strongest?esc(strongest.name)+' ('+strongest.percent+'%)':'-'}</strong>.</p>
+    <p>Kebiasaan dengan capaian terendah dan perlu menjadi prioritas peningkatan adalah <strong>${weakest?esc(weakest.name)+' ('+weakest.percent+'%)':'-'}</strong>.</p>
     <p class="muted">Persentase pengisian dihitung dari jumlah entri dibanding hari kalender pada periode yang dipilih. Hari tanpa pengisian dihitung belum mengisi.</p>
     <p style="margin-top:28px">Wali Kelas / Pengelola<br><br><br>________________________</p>
     <p class="muted" style="text-align:center;font-size:12px">SD Islam Cikal Harapan II · Monitoring 7 Kebiasaan Anak Indonesia Hebat</p>`;
@@ -821,6 +841,11 @@ function renderIndividual(student){
 $('individualStudent').onchange=()=>{
   const key=$('individualStudent').value;
   renderIndividual((lastReport?.students||[]).find(s=>`${s.kelas}|${s.nama}`===key));
+};
+$('backToStudentList').onclick=()=>{
+  $('individualStudent').value='';
+  renderIndividual(null);
+  $('studentReport').scrollIntoView({behavior:'smooth',block:'start'});
 };
 
 /* TOMBOL FILTER */
