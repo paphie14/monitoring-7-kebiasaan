@@ -779,7 +779,7 @@ function render(r){
   $('studentReport').innerHTML=
     '<table><thead><tr><th>Kelas</th><th>Nama siswa</th><th>Entri</th>'+
     HABITS.map(h=>`<th>${esc(h)}</th>`).join('')+
-    '<th>Pengisian</th><th>Capaian Ya</th></tr></thead><tbody>'+
+    '<th>Kelengkapan Laporan (%)</th><th>Capaian Ya</th></tr></thead><tbody>'+
     (r.students||[]).map((s,i)=>
       `<tr>
         <td>${esc(s.kelas)}</td>
