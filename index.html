@@ -124,29 +124,6 @@ footer{
   padding:18px;
   font-size:13px
 }
-
-/* ANIMASI LOADING PERIKSA KODE */
-.btn-loading{
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  gap:9px;
-}
-
-.spinner{
-  width:17px;
-  height:17px;
-  border:3px solid rgba(255,255,255,.35);
-  border-top-color:white;
-  border-radius:50%;
-  animation:spin .7s linear infinite;
-  flex-shrink:0;
-}
-
-@keyframes spin{
-  to{transform:rotate(360deg)}
-}
-
 @media(max-width:600px){
   .card{padding:15px}
   .habit select{width:115px}
@@ -157,6 +134,25 @@ footer{
   .card{box-shadow:none;border:0}
   main{padding:0}
 }
+
+.btn-loading{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:9px;
+  opacity:.8;
+  cursor:wait;
+}
+.spinner{
+  width:17px;
+  height:17px;
+  border:3px solid rgba(255,255,255,.35);
+  border-top-color:white;
+  border-radius:50%;
+  animation:spin .7s linear infinite;
+  flex-shrink:0;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
 </style>
 </head>
 
@@ -496,11 +492,11 @@ $('habits').innerHTML=HABITS.map((h,i)=>
   </div>`
 ).join('');
 
-/* PERIKSA KODE + ANIMASI LOADING */
 $('checkCode').onclick=async()=>{
   $('parentFormCard').classList.add('hidden');
 
   const btn=$('checkCode');
+  const originalText='Periksa Kode';
   const code=$('parentCode').value.trim();
 
   if(!code){
@@ -508,12 +504,9 @@ $('checkCode').onclick=async()=>{
     return;
   }
 
-  // Tampilkan loading
   btn.disabled=true;
   btn.classList.add('btn-loading');
   btn.innerHTML='<span class="spinner"></span> Memeriksa kode...';
-
-  status('parentStatus','Sedang memeriksa kode akses...');
 
   try{
     const r=await jsonp({action:'parentReport',code});
@@ -533,12 +526,10 @@ $('checkCode').onclick=async()=>{
 
   }catch(e){
     status('parentStatus',e.message,'err');
-
   }finally{
-    // Kembalikan tombol setelah proses selesai
     btn.disabled=false;
     btn.classList.remove('btn-loading');
-    btn.textContent='Periksa Kode';
+    btn.innerHTML=originalText;
   }
 };
 
@@ -559,6 +550,9 @@ function history(rows){
 $('submitParent').onclick=async()=>{
   if(!currentStudent)return;
 
+  const btn=$('submitParent');
+  const originalText='Kirim Pemantauan';
+  const code=$('parentCode').value.trim();
   const answers=HABITS.map((_,i)=>$('habit'+i).value);
   const tanggal=$('tanggal').value;
 
@@ -567,28 +561,39 @@ $('submitParent').onclick=async()=>{
     return;
   }
 
+  btn.disabled=true;
+  btn.classList.add('btn-loading');
+  btn.innerHTML='<span class="spinner"></span> Mengirim pemantauan...';
+
   try{
     const r=await post('parentSubmit',{
-      code:$('parentCode').value.trim(),
+      code,
       tanggal,
       answers
     });
 
     if(!r.ok)throw Error(r.message);
 
-    status('submitStatus',r.message,'ok');
+    // Pengiriman berhasil: bersihkan formulir dan kembali ke halaman awal.
+    currentStudent=null;
+    $('parentFormCard').classList.add('hidden');
+    $('parentCode').value='';
+    $('tanggal').value=today();
 
     HABITS.forEach((_,i)=>$('habit'+i).value='');
 
-    const fresh=await jsonp({
-      action:'parentReport',
-      code:$('parentCode').value.trim()
-    });
-
-    if(fresh.ok)history(fresh.records||[]);
+    status(
+      'parentStatus',
+      'Pemantauan berhasil disimpan, terima kasih.',
+      'ok'
+    );
 
   }catch(e){
     status('submitStatus',e.message,'err');
+  }finally{
+    btn.disabled=false;
+    btn.classList.remove('btn-loading');
+    btn.innerHTML=originalText;
   }
 };
 
