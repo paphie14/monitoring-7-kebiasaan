@@ -135,6 +135,18 @@ footer{
   main{padding:0}
 }
 
+.individual-head{background:#eef4fb;border-radius:10px;padding:14px;margin:12px 0}
+.individual-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:10px;margin:12px 0}
+.individual-stat{background:#f3f7fc;border-radius:10px;padding:12px}
+.individual-stat b{display:block;font-size:23px;color:var(--navy)}
+.progress{height:9px;background:#e7edf5;border-radius:99px;overflow:hidden;min-width:90px}
+.progress span{display:block;height:100%;background:#21865b;border-radius:99px}
+.habit-line{display:grid;grid-template-columns:minmax(150px,1fr) minmax(90px,2fr) 48px;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}
+.daily-chart{display:flex;align-items:flex-end;gap:6px;min-height:150px;overflow-x:auto;padding:12px 4px 4px;border-bottom:1px solid var(--line)}
+.daily-col{min-width:25px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:130px;gap:5px}
+.daily-bar{width:17px;min-height:2px;background:#2b70b8;border-radius:5px 5px 0 0}
+.daily-label{font-size:10px;color:var(--muted)}
+@media print{body.print-individual header,body.print-individual .tabs,body.print-individual #loginCard,body.print-individual #dashboard>.card:first-child,body.print-individual #summary,body.print-individual #habitReport,body.print-individual #studentReport,body.print-individual #individualCard>h2,body.print-individual #individualCard>label,body.print-individual #individualCard>select,body.print-individual #individualCard>.actions{display:none!important}body.print-individual #individualCard{display:block!important;border:0;box-shadow:none}body.print-individual #individualReport{display:block!important}}
 .btn-loading{
   display:inline-flex;
   align-items:center;
@@ -195,6 +207,7 @@ footer{
 
     <label>Kode akses siswa</label>
     <input id="parentCode" autocomplete="off" placeholder="Masukkan kode akses">
+    <small class="muted">Kode akan tersimpan di browser ini agar tidak perlu dimasukkan ulang.</small>
 
     <div class="actions">
       <button id="checkCode">Periksa Kode</button>
@@ -337,7 +350,16 @@ footer{
       <div id="summary" class="statrow"></div>
       <div id="habitReport"></div>
       <h3>Rekap per Siswa</h3>
+      <p class="muted">Persentase tiap kebiasaan dan pengisian ditampilkan berdasarkan data yang dikirim Apps Script. Tanda “—” berarti data rinci tersebut belum tersedia dari server.</p>
       <div id="studentReport" class="tablewrap"></div>
+    </div>
+
+    <div class="card" id="individualCard">
+      <h2>Laporan Individu Siswa</h2>
+      <label>Pilih siswa</label>
+      <select id="individualStudent"><option value="">Pilih siswa dari hasil laporan</option></select>
+      <div id="individualReport" class="muted">Pilih siswa untuk melihat laporan individu.</div>
+      <div class="actions"><button class="secondary" id="printIndividual">Cetak Laporan Individu / PDF</button></div>
     </div>
 
   </div>
@@ -371,10 +393,29 @@ const HABITS=[
 
 const $=id=>document.getElementById(id);
 
+// Simpan kode akses siswa secara lokal pada browser/perangkat ini.
+const PARENT_CODE_KEY='g7kaih_parent_access_code';
+function saveParentCode(value){
+  try{
+    const code=String(value||'').trim();
+    if(code) localStorage.setItem(PARENT_CODE_KEY,code);
+  }catch(e){
+    console.warn('Browser tidak mengizinkan penyimpanan kode akses.',e);
+  }
+}
+function restoreParentCode(){
+  try{
+    $('parentCode').value=localStorage.getItem(PARENT_CODE_KEY)||'';
+  }catch(e){
+    console.warn('Kode akses lokal tidak dapat dibaca.',e);
+  }
+}
+
 let currentStudent=null;
 let staffToken='';
 let staffRole='';
 let lastReport=null;
+let selectedIndividual=null;
 let postResolve=null;
 let postTimer=null;
 
@@ -465,6 +506,9 @@ const today=()=>{
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 };
 
+restoreParentCode();
+$('parentCode').addEventListener('input',e=>saveParentCode(e.target.value));
+
 $('tanggal').value=today();
 $('filterDate').value=today();
 $('filterMonth').value=today().slice(0,7);
@@ -497,7 +541,9 @@ $('checkCode').onclick=async()=>{
 
   const btn=$('checkCode');
   const originalText='Periksa Kode';
-  const code=$('parentCode').value.trim();
+  const code=$('parentCode').value.trim() || (()=>{try{return localStorage.getItem(PARENT_CODE_KEY)||'';}catch(e){return '';}})();
+  $('parentCode').value=code;
+  saveParentCode(code);
 
   if(!code){
     status('parentStatus','Masukkan kode akses.','err');
@@ -577,7 +623,6 @@ $('submitParent').onclick=async()=>{
     // Pengiriman berhasil: bersihkan formulir dan kembali ke halaman awal.
     currentStudent=null;
     $('parentFormCard').classList.add('hidden');
-    $('parentCode').value='';
     $('tanggal').value=today();
 
     HABITS.forEach((_,i)=>$('habit'+i).value='');
@@ -701,18 +746,82 @@ function render(r){
     ).join('')+
     '</table></div>';
 
+  // Mendukung data persiswa yang dikirim API Apps Script.
+  // Format yang dikenali: s.habits[{name,percent}], s.habitPercents[],
+  // s.habitPercents{namaKebiasaan: persen}, atau s.habitYes[].
+  function studentHabitPercent(student,index,name){
+    const data=student.habits ?? student.habitPercents ?? student.habitPercentages;
+    let value;
+    if(Array.isArray(data)){
+      const item=data[index];
+      value=(item && typeof item==='object') ? item.percent : item;
+    }else if(data && typeof data==='object'){
+      const item=data[name] ?? data[index];
+      value=(item && typeof item==='object') ? item.percent : item;
+    }
+    if(value===undefined && Array.isArray(student.habitYes)){
+      const total=Number(student.total||0);
+      value=total ? Number(student.habitYes[index]||0)/total*100 : 0;
+    }
+    return value===undefined || value===null || value==='' ? '—' : `${Number(value).toFixed(1).replace(/\\.0$/,'')}%`;
+  }
+
+  function studentCompletionPercent(student){
+    const value=student.completionPercent ?? student.fillPercent ?? student.completion;
+    return value===undefined || value===null || value==='' ? '—' :
+      `${Number(value).toFixed(1).replace(/\\.0$/,'')}%`;
+  }
+
   $('studentReport').innerHTML=
-    '<table><tr><th>Kelas</th><th>Nama siswa</th><th>Entri</th><th>Persentase Ya</th></tr>'+
+    '<table><thead><tr><th>Kelas</th><th>Nama siswa</th><th>Entri</th>'+
+    HABITS.map(h=>`<th>${esc(h)}</th>`).join('')+
+    '<th>Pengisian</th><th>Capaian Ya</th></tr></thead><tbody>'+
     (r.students||[]).map(s=>
       `<tr>
         <td>${esc(s.kelas)}</td>
         <td>${esc(s.nama)}</td>
-        <td>${s.total}</td>
-        <td>${s.percent}%</td>
+        <td>${Number(s.total||0)}</td>
+        ${HABITS.map((h,i)=>`<td>${studentHabitPercent(s,i,h)}</td>`).join('')}
+        <td>${studentCompletionPercent(s)}</td>
+        <td>${s.percent===undefined || s.percent===null ? '—' : `${s.percent}%`}</td>
       </tr>`
     ).join('')+
-    '</table>';
+    '</tbody></table>';
+
+  const indiv=$('individualStudent'),oldIndiv=indiv.value;
+  indiv.innerHTML='<option value="">Pilih siswa dari hasil laporan</option>'+
+    (r.students||[]).map(s=>`<option value="${esc(s.kelas+'|'+s.nama)}">${esc(s.nama)} — ${esc(s.kelas)}</option>`).join('');
+  if(oldIndiv && (r.students||[]).some(s=>`${s.kelas}|${s.nama}`===oldIndiv)){
+    indiv.value=oldIndiv;renderIndividual(r.students.find(s=>`${s.kelas}|${s.nama}`===oldIndiv));
+  }else{indiv.value='';renderIndividual(null);}
 }
+
+
+function renderIndividual(student){
+  selectedIndividual=student||null;
+  const target=$('individualReport');
+  if(!student){target.innerHTML='<p class="muted">Pilih siswa untuk melihat laporan individu.</p>';return;}
+  const p=lastReport?.period||{};
+  const periodLabel=p.period==='day'?(p.date||'Harian'):p.period==='month'?(p.month||'Bulanan'):p.period==='semester'?`Semester ${p.semester||1} ${p.year||''}`:p.period==='year'?`Tahun ${p.year||''}`:'Semua periode';
+  const habits=student.habits||[],daily=student.daily||[];
+  const strongest=[...habits].sort((a,b)=>b.percent-a.percent)[0],weakest=[...habits].sort((a,b)=>a.percent-b.percent)[0];
+  target.innerHTML=`
+    <div class="individual-head"><h3 style="margin:0;color:var(--navy)">LAPORAN INDIVIDU SISWA</h3><strong>${esc(student.nama)}</strong> · Kelas ${esc(student.kelas)}<div class="muted">Periode: ${esc(periodLabel)}</div></div>
+    <div class="individual-grid"><div class="individual-stat"><b>${student.total||0}</b>Entri pengisian</div><div class="individual-stat"><b>${student.completionPercent||0}%</b>Persentase pengisian</div><div class="individual-stat"><b>${student.percent||0}%</b>Capaian jawaban Ya</div></div>
+    <h3>A. Persentase Capaian 7 Kebiasaan</h3>
+    ${habits.map(h=>`<div class="habit-line"><span>${esc(h.name)}</span><div class="progress"><span style="width:${Math.max(0,Math.min(100,Number(h.percent)||0))}%"></span></div><strong>${h.percent||0}%</strong></div>`).join('')}
+    <h3>B. Grafik Perkembangan Harian</h3>
+    ${daily.length?`<div class="daily-chart">${daily.map(d=>`<div class="daily-col" title="${esc(d.tanggal)}: ${d.percent}%"><div class="daily-bar" style="height:${Math.max(2,Number(d.percent)||0)}%"></div><span class="daily-label">${esc(d.tanggal.slice(8,10))}</span></div>`).join('')}</div><p class="muted">Setiap batang menunjukkan persentase jawaban Ya pada tanggal tersebut.</p>`:'<p class="muted">Belum ada data harian pada periode ini.</p>'}
+    <h3>C. Catatan Evaluasi</h3><p>Kebiasaan dengan capaian tertinggi: <strong>${strongest?esc(strongest.name)+' ('+strongest.percent+'%)':'-'}</strong>.</p>
+    <p>Kebiasaan yang perlu ditingkatkan: <strong>${weakest?esc(weakest.name)+' ('+weakest.percent+'%)':'-'}</strong>.</p>
+    <p class="muted">Persentase pengisian dihitung dari jumlah entri dibanding hari kalender pada periode yang dipilih. Hari tanpa pengisian dihitung belum mengisi.</p>
+    <p style="margin-top:28px">Wali Kelas / Pengelola<br><br><br>________________________</p>
+    <p class="muted" style="text-align:center;font-size:12px">SD Islam Cikal Harapan II · Monitoring 7 Kebiasaan Anak Indonesia Hebat</p>`;
+}
+$('individualStudent').onchange=()=>{
+  const key=$('individualStudent').value;
+  renderIndividual((lastReport?.students||[]).find(s=>`${s.kelas}|${s.nama}`===key));
+};
 
 /* TOMBOL FILTER */
 $('applyFilters').onclick=loadReport;
@@ -729,6 +838,13 @@ $('logout').onclick=()=>{
 
   status('loginStatus','Anda telah keluar.','ok');
 };
+
+$('printIndividual').onclick=()=>{
+  if(!selectedIndividual){status('reportStatus','Pilih siswa terlebih dahulu.','err');return;}
+  document.body.classList.add('print-individual');window.print();
+  setTimeout(()=>document.body.classList.remove('print-individual'),700);
+};
+window.addEventListener('afterprint',()=>document.body.classList.remove('print-individual'));
 
 /* TOMBOL CETAK */
 $('printReport').onclick=()=>{
@@ -747,13 +863,28 @@ $('downloadCsv').onclick=()=>{
     return;
   }
 
+  const csvHabitPercent=(s,index,name)=>{
+    const data=s.habits ?? s.habitPercents ?? s.habitPercentages;
+    let value;
+    if(Array.isArray(data)){
+      const item=data[index];
+      value=(item && typeof item==='object') ? item.percent : item;
+    }else if(data && typeof data==='object'){
+      const item=data[name] ?? data[index];
+      value=(item && typeof item==='object') ? item.percent : item;
+    }
+    if(value===undefined && Array.isArray(s.habitYes)){
+      value=Number(s.total||0) ? Number(s.habitYes[index]||0)/Number(s.total)*100 : 0;
+    }
+    return value===undefined || value===null || value==='' ? '' : Number(value).toFixed(1)+'%';
+  };
   const rows=[
-    ['Kelas','Nama Siswa','Entri','Persentase Ya'],
+    ['Kelas','Nama Siswa','Entri',...HABITS.map(h=>h+' (%)'),'Persentase Pengisian','Capaian Ya'],
     ...(lastReport.students||[]).map(s=>[
-      s.kelas,
-      s.nama,
-      s.total,
-      s.percent+'%'
+      s.kelas,s.nama,s.total,
+      ...HABITS.map((h,i)=>csvHabitPercent(s,i,h)),
+      s.completionPercent ?? s.fillPercent ?? s.completion ?? '',
+      s.percent===undefined ? '' : s.percent+'%'
     ])
   ];
 
