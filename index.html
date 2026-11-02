@@ -124,6 +124,29 @@ footer{
   padding:18px;
   font-size:13px
 }
+
+/* ANIMASI LOADING PERIKSA KODE */
+.btn-loading{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:9px;
+}
+
+.spinner{
+  width:17px;
+  height:17px;
+  border:3px solid rgba(255,255,255,.35);
+  border-top-color:white;
+  border-radius:50%;
+  animation:spin .7s linear infinite;
+  flex-shrink:0;
+}
+
+@keyframes spin{
+  to{transform:rotate(360deg)}
+}
+
 @media(max-width:600px){
   .card{padding:15px}
   .habit select{width:115px}
@@ -473,15 +496,24 @@ $('habits').innerHTML=HABITS.map((h,i)=>
   </div>`
 ).join('');
 
+/* PERIKSA KODE + ANIMASI LOADING */
 $('checkCode').onclick=async()=>{
   $('parentFormCard').classList.add('hidden');
 
+  const btn=$('checkCode');
   const code=$('parentCode').value.trim();
 
   if(!code){
     status('parentStatus','Masukkan kode akses.','err');
     return;
   }
+
+  // Tampilkan loading
+  btn.disabled=true;
+  btn.classList.add('btn-loading');
+  btn.innerHTML='<span class="spinner"></span> Memeriksa kode...';
+
+  status('parentStatus','Sedang memeriksa kode akses...');
 
   try{
     const r=await jsonp({action:'parentReport',code});
@@ -501,6 +533,12 @@ $('checkCode').onclick=async()=>{
 
   }catch(e){
     status('parentStatus',e.message,'err');
+
+  }finally{
+    // Kembalikan tombol setelah proses selesai
+    btn.disabled=false;
+    btn.classList.remove('btn-loading');
+    btn.textContent='Periksa Kode';
   }
 };
 
